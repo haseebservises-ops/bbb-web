@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Better Bite Buddy — Monorepo (web)
 
-## Getting Started
+Live (Production): https://bbb-web-five.vercel.app  
+Preview URL (auto per branch): shown by Vercel on each deployment
 
-First, run the development server:
+---
+
+## Tech
+- **Next.js 15 + App Router**
+- **Tailwind v4**
+- **Auth.js (NextAuth)** – Google OAuth (optional)
+- **Vercel** (hosting; auto-deploy on git push)
+- **Cloudflare Worker + KV** (email exists check & webhook)
+- CSS: global styles in `app/globals.css`
+
+---
+
+## Environments
+
+- **Production** → branch: `main`  
+  Env vars (Vercel → Settings → Environment Variables → *Production*):
+  - `NEXTAUTH_URL = https://<your-primary-domain>`
+  - `NEXTAUTH_SECRET = <random 32+ bytes>`
+
+- **Preview** → any non-main branch (e.g. `staging`)  
+  Optional envs (same screen → *Preview*):
+  - `NEXTAUTH_URL = https://<your-staging-domain>` (or leave out if auth not needed)
+
+> Each push to a non-main branch creates a **Preview** deployment with its own URL.
+
+---
+
+## Branch workflow (simple)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+# 1) create staging branch once
+git checkout -b staging
+git push -u origin staging
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# 2) develop on staging (safe, creates Preview build each push)
+git add -A
+git commit -m "feat: change header"
+git push
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 3) go live (when happy)
+git checkout main
+git merge staging
+git push    # Vercel deploys Production
