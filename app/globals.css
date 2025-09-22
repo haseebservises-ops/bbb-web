@@ -1,0 +1,286 @@
+@import "tailwindcss";
+
+/* ---------- Base / tokens ---------- */
+@layer base {
+  /* Light theme (default) */
+  :root{
+    --bbb-bg:#ffffff; /* page background */
+    --bbb-bg-grad: radial-gradient(1000px 400px at 30% -10%, rgba(20,32,55,.08), rgba(20,32,55,0) 60%);
+    --bbb-surface:#ffffff;   /* cards */
+    --bbb-elev1:#f8fafc;
+    --bbb-elev2:#f1f5f9;
+
+    /* Brand (app-wide) */
+    --bbb-primary:#12b76a;    /* fuel green */
+    --bbb-primary-600:#0ea95f;
+    --bbb-primary-700:#0a8a4d;
+
+    --bbb-ink:#0b1220;        /* text */
+    --bbb-ink-dim:#64748b;    /* secondary text */
+    --bbb-lines:#e5e7eb;      /* borders */
+
+    --bbb-warning:#d97706;
+    --bbb-danger:#ef4444;
+    --bbb-good:#22c55e;
+
+    --radius-2xl:18px;
+    --radius-xl:14px;
+    --radius-lg:12px;
+
+    --ring-outer:0 0 0 1px #cbd5e1, 0 0 0 6px rgb(18 183 106 / .18);
+
+    /* Fuel blocks */
+    --fuel-on-border:#9adbb8;
+    --fuel-on-bg:#e9f7f0;
+    --fuel-off-border:#d4d8e3;
+    --fuel-off-bg:#f5f7fb;
+  }
+
+  /* Dark theme overrides */
+  [data-theme="dark"]{
+    --bbb-bg:#0d1117;         /* page background */
+    --bbb-bg-grad: radial-gradient(1200px 600px at 30% -10%, #142037 0%, rgba(20,32,55,0) 60%);
+    --bbb-surface:#0f1522;    /* cards */
+    --bbb-elev1:#121b2a;
+    --bbb-elev2:#0b1020;
+
+    --bbb-primary:#12b76a;
+    --bbb-primary-600:#0ea95f;
+    --bbb-primary-700:#0a8a4d;
+
+    --bbb-ink:#e6edf3;        /* text */
+    --bbb-ink-dim:#9fb0c0;    /* secondary text */
+    --bbb-lines:#213047;      /* borders */
+
+    --bbb-warning:#f59e0b;
+    --bbb-danger:#ef4444;
+    --bbb-good:#22c55e;
+
+    --ring-outer:0 0 0 1px #1f2c44, 0 0 0 6px rgb(18 183 106 / .18);
+
+    /* Fuel blocks */
+    --fuel-on-border:#184028;
+    --fuel-on-bg:#153826;
+    --fuel-off-border:#2a3552;
+    --fuel-off-bg:#0f172a;
+  }
+
+  * { outline: none; }
+  html, body { height: 100%; }
+  body{
+    color: var(--bbb-ink);
+    background: var(--bbb-bg-grad), var(--bbb-bg);
+  }
+}
+
+/* ---------- Components ---------- */
+@layer components {
+  .bbb-card{
+    background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0)), var(--bbb-surface);
+    border: 1px solid var(--bbb-lines);
+    border-radius: var(--radius-2xl);
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.08),
+      inset 0 1px 0 rgba(255,255,255,.04);
+  }
+
+  .btn{ @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition; }
+  .btn-primary{
+    color:#0b1422;
+    background:
+      radial-gradient(120% 120% at 0% 0%, rgba(255,255,255,.30) 0%, transparent 40%),
+      linear-gradient(180deg, var(--bbb-primary) 0%, var(--bbb-primary-600) 100%);
+    box-shadow: 0 10px 30px rgb(18 183 106 / .25);
+  }
+  .btn-primary:hover{ filter:brightness(1.03); transform:translateY(-1px); }
+
+  .btn-ghost{
+    color:var(--bbb-ink);
+    background:transparent;
+    border:1px solid var(--bbb-lines);
+  }
+  /* Hover bg tuned per theme for contrast */
+  .btn-ghost:hover{ background: rgba(0,0,0,.03); }
+  [data-theme="dark"] .btn-ghost:hover{ background: rgba(255,255,255,.04); }
+
+  .bbb-tabs{ @apply inline-flex p-1 rounded-xl border; border-color:var(--bbb-lines); background:var(--bbb-elev2); }
+  .bbb-tab{ @apply px-3 py-2 rounded-lg text-sm transition; color:var(--bbb-ink-dim); }
+  .bbb-tab[data-active="true"]{
+    color:var(--bbb-ink);
+    /* fallback + dark override below */
+    background: rgba(0,0,0,.06);
+  }
+  [data-theme="dark"] .bbb-tab[data-active="true"]{ background: rgba(255,255,255,.06); }
+
+  .input{
+    @apply w-full rounded-xl text-sm bg-transparent px-3 py-2;
+    border:1px solid var(--bbb-lines);
+    color:var(--bbb-ink);
+  }
+  .input:focus{ box-shadow:var(--ring-outer); border-color:#28446b; }
+
+  .bubble{
+    border:1px solid var(--bbb-lines);
+    background: linear-gradient(180deg, rgba(0,0,0,.03), rgba(0,0,0,0)), var(--bbb-elev1);
+    border-radius:16px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+  }
+
+  .fuel-block{
+    height:22px; width:36px; border-radius:8px;
+    border:1px solid var(--fuel-on-border);
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0)), var(--fuel-on-bg);
+  }
+  .fuel-block--off{
+    border-color: var(--fuel-off-border);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)), var(--fuel-off-bg);
+  }
+
+  /* ====== Pickaxe-style Gate (scoped) ======
+     These styles target ONLY your React gate (#bbb-gate) so you get
+     the same look as your Pickaxe injection without affecting other pages.
+  */
+  /* Gate-specific brand palette (purple) without changing the rest of the app */
+  #bbb-gate{
+    --bbb-primary:#6233BC;
+    --bbb-primary-2:#7A63FE;
+    --bbb-teal:#74E1F0;
+    --bbb-ghost-bg:#F4F3FA;
+  }
+
+  /* Overlay backgrounds (auto adapts to dark/light page via backdrop + tokens) */
+  #bbb-gate{
+    overflow-x:hidden;
+    /* background is set inline in the component for the radial accents;
+       leave this here in case you render #bbb-gate without inline styles */
+    background:
+      radial-gradient(1000px 600px at 15% 10%, color-mix(in oklab, var(--bbb-primary-2) 28%, transparent), transparent 60%),
+      radial-gradient(900px 500px at 85% 90%, color-mix(in oklab, var(--bbb-teal) 28%, transparent), transparent 60%),
+      rgba(11,18,32,.86);
+    backdrop-filter: blur(6px);
+  }
+
+  /* Modal card */
+  .bbb-modal{
+    width:min(720px,94vw); max-height:88vh; overflow:auto;
+    background:var(--bbb-surface, var(--bbb-card)); border-radius:22px; padding:22px 22px 18px;
+    box-shadow:0 40px 80px rgba(3,7,18,.45);
+    font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    position:relative;
+    border:1px solid var(--bbb-lines);
+  }
+
+  /* Header row */
+  .bbb-head{display:flex; align-items:center; gap:12px; margin-bottom:6px}
+  .bbb-title{font-size:24px; font-weight:900; color:var(--bbb-ink); letter-spacing:.2px}
+  .bbb-sub{color:var(--bbb-ink-dim); font-size:14px; margin:4px 0 14px}
+
+  /* Badges */
+  .bbb-badges{display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 14px}
+  .bbb-badge{
+    font-size:11.5px; padding:7px 12px; border-radius:999px; font-weight:700;
+    color:var(--bbb-ink);
+    background:linear-gradient(135deg,#EEF2FF,#F0FDFA);
+    border:1px solid var(--bbb-lines);
+  }
+
+  /* Form layout */
+  .bbb-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  .bbb-grid-1{display:grid; gap:12px}
+  .bbb-field{display:flex; flex-direction:column}
+  .bbb-label{font-size:12.5px; color:var(--bbb-ink); opacity:.85; margin:2px 0 6px; font-weight:700; letter-spacing:.2px}
+
+  /* Inputs */
+  .bbb-input,.bbb-select,.bbb-multi,.bbb-text{
+    border:1px solid var(--bbb-lines); border-radius:14px; padding:12px 13px; font-size:14px; outline:none;
+    color:var(--bbb-ink); background:transparent;
+    transition:box-shadow .2s,border-color .2s;
+  }
+  .bbb-input:focus,.bbb-select:focus,.bbb-multi:focus,.bbb-text:focus{
+    border-color:color-mix(in oklab, var(--bbb-primary) 65%, white);
+    box-shadow:0 0 0 4px color-mix(in oklab, var(--bbb-primary) 25%, transparent);
+  }
+
+  /* Multi-select breathing room (if you ever switch to <select multiple>) */
+  .bbb-multi{height:140px; padding:6px}
+  .bbb-multi option{padding:8px 10px; line-height:1.75}
+
+  /* EULA + notes */
+  .bbb-note{font-size:12px; color:var(--bbb-ink-dim); margin-top:6px}
+
+  /* CTA buttons (on-brand) */
+  .bbb-cta{display:flex; gap:10px; align-items:center; margin-top:8px}
+  .bbb-btn{
+    flex:1; border:0; cursor:pointer; border-radius:14px; padding:13px 14px; font-weight:800;
+    background:linear-gradient(90deg, var(--bbb-primary), var(--bbb-primary-2));
+    color:#fff; box-shadow:0 12px 30px rgba(98,51,188,.35);
+    transition:transform .05s ease, filter .2s ease;
+  }
+  .bbb-btn:active{transform:translateY(1px)}
+  .bbb-ghost{
+    border:0; cursor:pointer; border-radius:14px; padding:12px 14px; font-weight:700;
+    background:var(--bbb-ghost-bg); color:#20104A;
+  }
+
+  /* Utility */
+  .bbb-x{position:absolute; right:10px; top:10px; border:0; background:transparent; font-size:22px; cursor:pointer}
+}
+
+/* ---------- Utilities ---------- */
+@layer utilities {
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+  .fade-up{ animation: fadeUp .5s ease both; }
+
+  @keyframes subtlePulse{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-1px)} }
+  .pulse-subtle{ animation: subtlePulse 1.8s ease-in-out infinite; }
+
+  /* Responsive helpers for the gate */
+  @media (max-width:600px){
+    .bbb-grid{ grid-template-columns:1fr !important; }
+    .bbb-modal{ width:94vw !important; padding:16px !important; }
+  }
+}
+
+/* ===== BBB fixes: layout + contrast + native <select> ===== */
+
+/* Prevent grid children from forcing horizontal scroll on desktop */
+.input, input, select, textarea { min-width: 0; }
+
+/* Modal/container helpers if your gate uses them */
+.bbb-modal      { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; }
+.bbb-modal-bg   { position: absolute; inset: 0; backdrop-filter: blur(6px); background: rgba(0,0,0,.45); }
+.bbb-modal-panel{
+  position: relative; width: 100%; max-width: 880px; max-height: 85vh; overflow: auto;
+  border: 1px solid var(--bbb-lines); border-radius: var(--radius-2xl);
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,0)), var(--bbb-surface);
+  box-shadow: 0 30px 80px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+/* Pills (Fast setup / Personalized / Science-based) */
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 4px 10px; border-radius: 999px; font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+  border:1px solid var(--bbb-lines); color: var(--bbb-ink-dim); background: var(--bbb-elev2);
+}
+.pill[data-active="true"]{ color: var(--bbb-ink); }
+
+/* Native <select> theming (better dark-mode contrast) */
+select, option { background-color: var(--bbb-elev2); color: var(--bbb-ink); }
+select{
+  appearance: none; /* keeps our arrow */
+  border:1px solid var(--bbb-lines); border-radius: var(--radius-xl);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%239fb0c0' stroke-width='1.6' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .75rem center; background-size: 16px 16px;
+  padding-right: 2.2rem;
+}
+select:focus{ box-shadow: var(--ring-outer); outline: none; }
+
+/* Improve the white-on-white dropdown in some browsers */
+[data-theme="dark"] option{ background-color: #0f1522; color: #e6edf3; }
+
+/* Inputs/checkbox rows don’t overflow in 2-col grids */
+.form-grid{ display:grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 768px){
+  .form-grid{ grid-template-columns: 1fr 1fr; }
+  .form-span-2{ grid-column: 1 / -1; }
+}
