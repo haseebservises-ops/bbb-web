@@ -7,18 +7,22 @@ const LS_ONBOARDED = "bbb_onboarded";
 export default function ReopenSetupButton() {
   const [show, setShow] = useState(false);
 
-  function refresh() {
+  const refresh = () => {
     setShow(typeof window !== "undefined" && localStorage.getItem(LS_ONBOARDED) !== "1");
-  }
+  };
 
   useEffect(() => {
     refresh();
-    const onChange = () => refresh();
+
+    // Typed listener (no `any`)
+    const onChange: EventListener = () => refresh();
+
     window.addEventListener("storage", onChange);
-    window.addEventListener("bbb:onboarded" as any, onChange);
+    window.addEventListener("bbb:onboarded", onChange);
+
     return () => {
       window.removeEventListener("storage", onChange);
-      window.removeEventListener("bbb:onboarded" as any, onChange);
+      window.removeEventListener("bbb:onboarded", onChange);
     };
   }, []);
 
