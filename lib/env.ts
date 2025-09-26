@@ -26,7 +26,7 @@ function bool(v?: string | null, fallback = false) {
  *
  * In PRODUCTION these overrides are ignored — prod is always Pickaxe.
  */
-const FORCE_NATIVE = bool(process.env.NEXT_PUBLIC_FORCE_NATIVE, false);
+const FORCE_NATIVE = bool(process.env.NEXT_PUBLIC_FORCE_NATIVE, true);
 const FORCE_PICKAXE =
   bool(process.env.NEXT_PUBLIC_FORCE_PICKAXE, false) ||
   bool(process.env.NEXT_PUBLIC_USE_PICKAXE, false);
