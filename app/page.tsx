@@ -9,17 +9,24 @@ import OnboardingGate, { BBBProfile } from "./components/OnboardingGate";
 import ReopenSetupButton from "./components/ReopenSetupButton";
 
 export default function Page() {
-  // TEMP DEBUG — remove after you verify once
+  // One-time debug (remove later). Also visible badge at bottom-right.
   if (typeof window !== "undefined") {
     console.log("[BBB] FEATURES.usePickaxe =", FEATURES.usePickaxe);
   }
 
-  // Production → full-screen Pickaxe
+  // If Pickaxe is active, show it full-screen and return early.
   if (FEATURES.usePickaxe) {
-    return <PickaxeEmbed />;
+    return (
+      <>
+        <PickaxeEmbed />
+        <div className="fixed bottom-2 right-2 z-50 text-xs opacity-70 bg-black/30 dark:bg-white/10 px-2 py-1 rounded">
+          usePickaxe: {String(FEATURES.usePickaxe)}
+        </div>
+      </>
+    );
   }
 
-  // Staging/Preview/Local → Onboarding → NativeChat
+  // Otherwise (non-prod default) show our Native path with onboarding
   const [profile, setProfile] = useState<BBBProfile | null>(null);
 
   useEffect(() => {
@@ -32,6 +39,7 @@ export default function Page() {
           return;
         } catch {}
       }
+      // Minimal fallback profile
       setProfile({
         firstName: "",
         lastName: "",
@@ -71,6 +79,11 @@ export default function Page() {
           <NativeChat />
         </div>
       )}
+
+      {/* Small badge so you can verify at a glance; remove later */}
+      <div className="fixed bottom-2 right-2 z-50 text-xs opacity-70 bg-black/30 dark:bg-white/10 px-2 py-1 rounded">
+        usePickaxe: {String(FEATURES.usePickaxe)}
+      </div>
     </>
   );
 }
