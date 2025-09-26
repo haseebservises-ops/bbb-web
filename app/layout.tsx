@@ -1,12 +1,10 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import Script from "next/script";
 import "./globals.css";
-import ThemeToggle from "./components/ThemeToggle";
-import UserMenu from "./components/UserMenu";
-import { IS_PROD } from "@/lib/env";
+import Sidebar from "@/components/Sidebar";
+import { FEATURES } from "@/lib/env";
+
 
 // Your favicon (remote is fine)
 const FAVICON =
@@ -57,58 +55,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           })();`}
         </Script>
       </head>
-      <body className="min-h-dvh">
-        {/* Header */}
-        {!IS_PROD && (
-        <header
-          className="sticky top-0 z-40 border-b"
-          style={{
-            borderColor: "var(--bbb-lines)",
-            background: "linear-gradient(180deg, rgba(8,12,22,.08), rgba(8,12,22,.03))",
-            backdropFilter: "blur(10px)",
-          }}
-        >
-          <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3" aria-label="Better Bite Buddy home">
-            <Image
-              src="/bbb-logo.svg"
-              alt="Better Bite Buddy"
-              width={28}
-              height={28}
-              priority
-              className="rounded-lg"
-            />
-
-              <div className="leading-tight">
-                <div className="text-base font-semibold tracking-tight">Better Bite Buddy</div>
-                <div className="text-xs" style={{ color: "var(--bbb-ink-dim)" }}>
-                  Mindset × Nutrition × Tiny wins
-                </div>
-              </div>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
-              <Link href="/upgrade" className="btn btn-ghost">Upgrade: Starter</Link>
-              <Link href="/upgrade" className="btn btn-primary">Upgrade: Pro</Link>
-              <UserMenu />
-            </div>
-          </div>
-        </header>
-        )}
-
-        {/* Content */}
-        <main className={IS_PROD ? "" : "mx-auto max-w-7xl px-4 py-8"}>{children}</main>
-
-        {/* Footer */}
-        {!IS_PROD && (
-        <footer className="mt-16 border-t" style={{ borderColor: "var(--bbb-lines)" }}>
-          <div className="mx-auto max-w-7xl px-4 py-6 text-xs" style={{ color: "var(--bbb-ink-dim)" }}>
-            © {new Date().getFullYear()} Better Bite Buddy. All rights reserved.
-          </div>
-        </footer>
-        )}
+            <body className="min-h-dvh">
+        {/* No header/footer. App chrome is: left sidebar (non-prod) + main content */}
+        <div className="h-dvh w-dvw flex">
+          {FEATURES.showSidebar && <Sidebar />}
+          <main className={`flex-1 ${FEATURES.showSidebar ? "p-4 md:p-6" : ""}`}>{children}</main>
+        </div>
       </body>
+
     </html>
   );
 }
