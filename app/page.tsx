@@ -9,12 +9,11 @@ import OnboardingGate, { BBBProfile } from "./components/OnboardingGate";
 import ReopenSetupButton from "./components/ReopenSetupButton";
 
 export default function Page() {
-  // One-time debug (remove later). Also visible badge at bottom-right.
+  // quick debug – remove after you verify once
   if (typeof window !== "undefined") {
     console.log("[BBB] FEATURES.usePickaxe =", FEATURES.usePickaxe);
   }
 
-  // If Pickaxe is active, show it full-screen and return early.
   if (FEATURES.usePickaxe) {
     return (
       <>
@@ -26,7 +25,7 @@ export default function Page() {
     );
   }
 
-  // Otherwise (non-prod default) show our Native path with onboarding
+  // ----- Native path (preview/dev) -----
   const [profile, setProfile] = useState<BBBProfile | null>(null);
 
   useEffect(() => {
@@ -39,17 +38,10 @@ export default function Page() {
           return;
         } catch {}
       }
-      // Minimal fallback profile
       setProfile({
-        firstName: "",
-        lastName: "",
-        email: "",
-        mobile: "",
-        archetype: "",
-        heightInches: "",
-        weightLbs: "",
-        goals: [],
-        agreed: true,
+        firstName: "", lastName: "", email: "", mobile: "",
+        archetype: "", heightInches: "", weightLbs: "",
+        goals: [], agreed: true,
       });
     }
   }, []);
@@ -80,7 +72,6 @@ export default function Page() {
         </div>
       )}
 
-      {/* Small badge so you can verify at a glance; remove later */}
       <div className="fixed bottom-2 right-2 z-50 text-xs opacity-70 bg-black/30 dark:bg-white/10 px-2 py-1 rounded">
         usePickaxe: {String(FEATURES.usePickaxe)}
       </div>
