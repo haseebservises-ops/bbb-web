@@ -9,12 +9,17 @@ import OnboardingGate, { BBBProfile } from "./components/OnboardingGate";
 import ReopenSetupButton from "./components/ReopenSetupButton";
 
 export default function Page() {
-  // Production → full-screen Pickaxe, nothing else
+  // TEMP DEBUG — remove after you verify once
+  if (typeof window !== "undefined") {
+    console.log("[BBB] FEATURES.usePickaxe =", FEATURES.usePickaxe);
+  }
+
+  // Production → full-screen Pickaxe
   if (FEATURES.usePickaxe) {
     return <PickaxeEmbed />;
   }
 
-  // Staging/Preview/Local path
+  // Staging/Preview/Local → Onboarding → NativeChat
   const [profile, setProfile] = useState<BBBProfile | null>(null);
 
   useEffect(() => {
@@ -28,9 +33,15 @@ export default function Page() {
         } catch {}
       }
       setProfile({
-        firstName: "", lastName: "", email: "", mobile: "",
-        archetype: "", heightInches: "", weightLbs: "",
-        goals: [], agreed: true,
+        firstName: "",
+        lastName: "",
+        email: "",
+        mobile: "",
+        archetype: "",
+        heightInches: "",
+        weightLbs: "",
+        goals: [],
+        agreed: true,
       });
     }
   }, []);
@@ -48,7 +59,6 @@ export default function Page() {
       />
 
       {!profile ? (
-        // Minimal message until onboarding is done. No box, no duplicate buttons.
         <div className="p-6">
           <h1 className="text-xl font-bold">Welcome to Better Bite Buddy</h1>
           <p className="text-sm mt-2" style={{ color: "var(--bbb-ink-dim)" }}>
@@ -57,7 +67,6 @@ export default function Page() {
           <ReopenSetupButton />
         </div>
       ) : (
-        // Full-height native chat, clean
         <div className="h-dvh">
           <NativeChat />
         </div>
