@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 // app/components/ReopenSetupButton.tsx
 "use client";
 import { useEffect, useState } from "react";

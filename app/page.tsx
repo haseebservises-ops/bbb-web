@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import PickaxeEmbed from "./components/PickaxeEmbed";
 import OnboardingGate, { BBBProfile } from "./components/OnboardingGate";
 import ReopenSetupButton from "./components/ReopenSetupButton";
+import { FEATURES } from "@/lib/env";
+import NativeChat from "@/components/NativeChat"; // you'll use this in preview
 
 
 
@@ -30,6 +32,8 @@ function CoachApp({ profile }: { profile: BBBProfile }) {
    Page
 -------------------------------------------------------- */
 export default function Page() {
+
+  
   const [profile, setProfile] = useState<BBBProfile | null>(null);
 
   // If user already onboarded, restore a profile so chat shows after nav/refresh

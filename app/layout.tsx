@@ -6,6 +6,7 @@ import Script from "next/script";
 import "./globals.css";
 import ThemeToggle from "./components/ThemeToggle";
 import UserMenu from "./components/UserMenu";
+import { IS_PROD } from "@/lib/env";
 
 // Your favicon (remote is fine)
 const FAVICON =
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh">
         {/* Header */}
+        {!IS_PROD && (
         <header
           className="sticky top-0 z-40 border-b"
           style={{
@@ -68,14 +70,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3" aria-label="Better Bite Buddy home">
-              <Image
-                src={FAVICON}
-                alt="BBB"
-                width={40}
-                height={40}
-                priority
-                className="rounded-lg"
-              />
+            <Image
+              src="/bbb-logo.svg"
+              alt="Better Bite Buddy"
+              width={28}
+              height={28}
+              priority
+              className="rounded-lg"
+            />
+
               <div className="leading-tight">
                 <div className="text-base font-semibold tracking-tight">Better Bite Buddy</div>
                 <div className="text-xs" style={{ color: "var(--bbb-ink-dim)" }}>
@@ -92,16 +95,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </header>
+        )}
 
         {/* Content */}
-        <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
+        <main className={IS_PROD ? "" : "mx-auto max-w-7xl px-4 py-8"}>{children}</main>
 
         {/* Footer */}
+        {!IS_PROD && (
         <footer className="mt-16 border-t" style={{ borderColor: "var(--bbb-lines)" }}>
           <div className="mx-auto max-w-7xl px-4 py-6 text-xs" style={{ color: "var(--bbb-ink-dim)" }}>
             © {new Date().getFullYear()} Better Bite Buddy. All rights reserved.
           </div>
         </footer>
+        )}
       </body>
     </html>
   );
