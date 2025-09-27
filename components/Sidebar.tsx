@@ -3,19 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import ThemeToggle from "@/app/components/ThemeToggle"; // ← this fixes the import
+import ThemeToggle from "@/app/components/ThemeToggle";
 import { MessageSquare, Clock, Settings, Crown, ChevronRight, ChevronLeft, User } from "lucide-react";
 import { IS_PROD } from "@/lib/env";
-
-{!IS_PROD && (
-  <a href="/admin" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5">
-    Admin
-  </a>
-)}
+import { useSession } from "next-auth/react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { data: session } = useSession();
+  const role = (session?.user as any)?.role ?? "user";
+  const canSeeAdmin = role === "admin" || role === "superadmin";
+  const isSuper = role === "superadmin";
 
   useEffect(() => {
     try {
@@ -43,11 +42,11 @@ export default function Sidebar() {
       style={{ borderColor: "var(--bbb-lines)" }}
     >
       <div className="p-3 w-full flex flex-col">
-        {/* top row: app name + collapse button */}
+        {/* top row */}
         <div className="flex items-center justify-between mb-3">
           {!collapsed && <div className="text-sm font-semibold">Better Bite Buddy</div>}
           <button
-            className="rounded-md p-1 hover:bg-black/5 dark:hover:bg-white/5"
+            className="rounded-md p-1 hover:bg-black/5 dark:hover:bg:white/5"
             onClick={toggle}
             title={collapsed ? "Expand" : "Collapse"}
           >
@@ -67,6 +66,22 @@ export default function Sidebar() {
               </Link>
             );
           })}
+
+          {/* admin shortcuts (preview/dev only) */}
+          {!IS_PROD && canSeeAdmin && (
+            <Link href="/admin"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
+              <span className="shrink-0">🛠️</span>
+              {!collapsed && <span>Admin</span>}
+            </Link>
+          )}
+          {!IS_PROD && isSuper && (
+            <Link href="/superadmin"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg:white/5">
+              <span className="shrink-0">🧰</span>
+              {!collapsed && <span>Superadmin</span>}
+            </Link>
+          )}
         </nav>
 
         {/* bottom controls */}
