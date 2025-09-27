@@ -1,6 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 type ThreadRow = { id: string; email: string; title: string | null; updated_at: string; message_count: number };
 type MemoryRow = { id: string; goal: string | null; prompt: string | null; mode: string; created_at: string };
@@ -10,19 +9,16 @@ type UserRow = {
   total_uses: number; created_at: string; active_at: string | null;
 };
 
-export default function UsersAdmin() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const initialTab = (params.get("tab") as "activity"|"memory"|"manage") || "activity";
-  const [tab, setTab] = useState<"activity"|"memory"|"manage">(initialTab);
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading…</div>}>
+      <UsersAdmin />
+    </Suspense>
+  );
+}
 
-  useEffect(() => {
-    // keep URL in sync when tab changes (nice for deep links)
-    const usp = new URLSearchParams(params.toString());
-    usp.set("tab", tab);
-    router.replace(`?${usp.toString()}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+function UsersAdmin() {
+  const [tab, setTab] = useState<"activity"|"memory"|"manage">("activity");
 
   return (
     <div className="p-6 space-y-4">
@@ -35,7 +31,7 @@ export default function UsersAdmin() {
       </div>
 
       {tab === "activity" && <ActivityTab />}
-      {tab === "memory" && <MemoryTab defaultUser={params.get("user") ?? ""} />}
+      {tab === "memory" && <MemoryTab />}
       {tab === "manage" && <ManageTab />}
     </div>
   );
@@ -113,7 +109,9 @@ function SummaryButton({ threadId }: { threadId: string }) {
       const msgs: any[] = j.messages ?? [];
       const snippet = msgs.slice(-6).map(m=>`${m.role}: ${m.content}`).join("\n");
       setText(snippet.length ? `Summary: ${snippet.slice(0, 220)}…` : "No messages.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -137,8 +135,8 @@ function exportCSV(rows: ThreadRow[]) {
 }
 
 /* ===== User Memory ===== */
-function MemoryTab({ defaultUser = "" }: { defaultUser?: string }) {
-  const [userId, setUserId] = useState(defaultUser);
+function MemoryTab() {
+  const [userId, setUserId] = useState("");
   const [mems, setMems] = useState<MemoryRow[]>([]);
   const [goal, setGoal] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -153,7 +151,8 @@ function MemoryTab({ defaultUser = "" }: { defaultUser?: string }) {
 
   async function add() {
     const r = await fetch("/api/admin/users/memories", {
-      method: "POST", headers: { "content-type": "application/json" },
+      method: "POST",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ user_id: userId || undefined, goal, prompt, mode }),
     });
     if (r.ok) { setGoal(""); setPrompt(""); await load(); }
@@ -161,7 +160,8 @@ function MemoryTab({ defaultUser = "" }: { defaultUser?: string }) {
 
   async function del(id: string) {
     await fetch("/api/admin/users/memories", {
-      method: "DELETE", headers: { "content-type": "application/json" },
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
       body: JSON.stringify({ id }),
     });
     await load();
