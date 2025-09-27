@@ -7,6 +7,8 @@ export default function AdminSidebar() {
   const items = [
     { href: "/admin", label: "Dashboard" },
     { href: "/admin/studio", label: "Studio details" },
+    { href: "/admin/knowledge", label: "Knowledge base" },
+    { href: "/admin/users", label: "Users" },
     { href: "/admin/mailing", label: "Mailing" },
     { href: "/admin/history", label: "History" },
     { href: "/admin/domain", label: "Domain" },
