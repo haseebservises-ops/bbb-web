@@ -5,6 +5,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ThemeToggle from "@/app/components/ThemeToggle"; // ← this fixes the import
 import { MessageSquare, Clock, Settings, Crown, ChevronRight, ChevronLeft, User } from "lucide-react";
+import { IS_PROD } from "@/lib/env";
+
+{!IS_PROD && (
+  <a href="/admin" className="block px-3 py-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/5">
+    Admin
+  </a>
+)}
 
 export default function Sidebar() {
   const pathname = usePathname();
