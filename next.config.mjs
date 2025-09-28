@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  eslint: { ignoreDuringBuilds: true },     // ignore ESLint on Vercel
-  typescript: { ignoreBuildErrors: true },  // ignore TS errors on Vercel
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "storage.googleapis.com" }],
+  },
 };
 export default nextConfig;

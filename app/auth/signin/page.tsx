@@ -1,12 +1,10 @@
 // app/auth/signin/page.tsx
 "use client";
-
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 
-export default function SignInPage() {
+export default function Page() {
   return (
     <Suspense fallback={<div className="p-6">Loading…</div>}>
       <SignInInner />
@@ -15,43 +13,30 @@ export default function SignInPage() {
 }
 
 function SignInInner() {
-  const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/";
-
+  const search = useSearchParams();
+  const callbackUrl = search.get("callbackUrl") ?? "/";
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function loginWithEmail(e: React.FormEvent) {
     e.preventDefault();
-    const value = email.trim();
-    if (!value) return;
+    if (!email.trim()) return;
+    setBusy(true);
     try {
-      setLoading("credentials");
       // Credentials provider id is "credentials"
-      await signIn("credentials", { email: value, redirect: true, callbackUrl });
+      await signIn("credentials", { email, redirect: true, callbackUrl });
     } finally {
-      setLoading(null);
+      setBusy(false);
     }
   }
 
-  // If a provider isn't configured yet, keep its button disabled.
-  const canGoogle = false;
-  const canX = false;
-  const canApple = false;
-  const canEmailProvider = false;
-
-  const btn = (enabled: boolean, active: boolean, extra = "") =>
-    `w-full rounded-full py-3 font-medium border ${
-      enabled ? "border-gray-600 hover:bg-gray-900" : "border-gray-800 text-gray-500 cursor-not-allowed"
-    } ${active ? "opacity-60" : ""} ${extra}`;
-
   return (
     <div className="min-h-screen grid md:grid-cols-2 bg-black text-white">
-      {/* Left: login card */}
       <div className="flex items-center justify-center p-6 md:p-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <Image
+            {/* Use <img> so we don't need image domain config */}
+            <img
               src="https://storage.googleapis.com/msgsndr/ROvsrlVUnHQifEIiaP7S/media/68b8a556bd7b76c153bb1800.png"
               alt="Better Bite Buddy"
               width={56}
@@ -61,74 +46,27 @@ function SignInInner() {
             <p className="text-sm text-gray-400 mt-3">
               You are signing in to <b>Better Bite Buddy</b>.
             </p>
-            <h1 className="text-2xl font-semibold mt-2">Log into your account</h1>
+            <h1 className="text-2xl font-semibold mt-2">Log in</h1>
           </div>
 
-          <div className="space-y-3">
-            {/* X / Twitter */}
-            <button
-              disabled={!canX || loading === "x"}
-              onClick={() => (canX ? signIn("twitter", { callbackUrl }) : undefined)}
-              className={btn(canX, loading === "x")}
-            >
-              𝕏 &nbsp; Continue with X
-            </button>
+          {/* Google (works only after you add GOOGLE_CLIENT_ID/SECRET and provider below) */}
+          <button
+            onClick={() => signIn("google", { callbackUrl })}
+            className="w-full rounded-full py-3 font-medium border border-gray-600 hover:bg-gray-900 mb-3"
+          >
+            Continue with Google
+          </button>
 
-            {/* Email provider (magic link) — leave disabled until SMTP wired */}
-            <button
-              disabled={!canEmailProvider || loading === "email"}
-              onClick={() => (canEmailProvider ? signIn("email", { callbackUrl }) : undefined)}
-              className={btn(canEmailProvider, loading === "email")}
-            >
-              ✉️ &nbsp; Continue with Email
-            </button>
-
-            {/* Google */}
-            <button
-              disabled={!canGoogle || loading === "google"}
-              onClick={() => (canGoogle ? signIn("google", { callbackUrl }) : undefined)}
-              className={btn(canGoogle, loading === "google")}
-            >
-              <span className="inline-block mr-2 align-middle">
-                <Image src="/google-icon.png" alt="Google" width={18} height={18} />
-              </span>
-              Continue with Google
-            </button>
-
-            {/* Apple */}
-            <button
-              disabled={!canApple || loading === "apple"}
-              onClick={() => (canApple ? signIn("apple", { callbackUrl }) : undefined)}
-              className={btn(canApple, loading === "apple")}
-            >
-              🍎 &nbsp; Continue with Apple
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="h-px flex-1 bg-gray-800" />
-            <div className="mx-3 text-xs text-gray-500">or</div>
-            <div className="h-px flex-1 bg-gray-800" />
-          </div>
-
-          {/* Minimal credentials sign-in */}
+          {/* Credentials text box */}
           <form onSubmit={loginWithEmail} className="space-y-2">
             <input
-              className="w-full rounded-full border border-gray-700 bg-transparent px-4 py-3 text-sm"
+              className="w-full border rounded px-3 py-2 text-black"
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
             />
-            <button
-              type="submit"
-              disabled={loading === "credentials"}
-              className={`w-full rounded-full py-3 font-medium ${
-                loading === "credentials" ? "bg-gray-700" : "bg-white text-black hover:bg-gray-200"
-              }`}
-            >
-              {loading === "credentials" ? "Signing in…" : "Continue"}
+            <button className="w-full rounded-full py-3 font-medium bg-white text-black hover:bg-gray-100" type="submit" disabled={busy}>
+              {busy ? "Signing in…" : "Continue"}
             </button>
           </form>
         </div>
@@ -136,10 +74,8 @@ function SignInInner() {
 
       {/* Right: subtle glow */}
       <div className="hidden md:flex items-center justify-center">
-        <div
-          className="w-64 h-64 rounded-full blur-3xl opacity-20"
-          style={{ background: "radial-gradient(#8a7cff, transparent 60%)" }}
-        />
+        <div className="w-64 h-64 rounded-full blur-3xl opacity-20"
+             style={{ background: "radial-gradient(#8a7cff, transparent 60%)" }} />
       </div>
     </div>
   );

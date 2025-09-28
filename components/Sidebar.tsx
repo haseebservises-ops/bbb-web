@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { MessageSquare, Clock, Settings, Crown, ChevronRight, ChevronLeft, User } from "lucide-react";
 import { IS_PROD } from "@/lib/env";
-import { useSession } from "next-auth/react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
-  // ⚠️ important: don't destructure directly from useSession()
-  const { data: session } = (useSession() ?? ({} as any));
-  const role = (session?.user as any)?.role ?? "user";
+  // IMPORTANT: don't destructure from useSession() directly (can be undefined during SSG/404)
+  const ses = useSession();
+  const role = (ses?.data?.user as any)?.role ?? "user";
   const canSeeAdmin = role === "admin" || role === "superadmin";
   const isSuper = role === "superadmin";
 
@@ -61,32 +61,25 @@ export default function Sidebar() {
           {items.map(i => {
             const active = pathname === i.href;
             return (
-              <Link
-                key={i.href}
-                href={i.href}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 ${active ? "font-semibold" : ""}`}
-              >
+              <Link key={i.href} href={i.href}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 ${active ? "font-semibold" : ""}`}>
                 <span className="shrink-0">{i.icon}</span>
                 {!collapsed && <span>{i.label}</span>}
               </Link>
             );
           })}
 
-          {/* admin shortcuts (preview/dev only) */}
+          {/* Admin shortcuts (non‑prod only) */}
           {!IS_PROD && canSeeAdmin && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
-            >
+            <Link href="/admin"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
               <span className="shrink-0">🛠️</span>
               {!collapsed && <span>Admin</span>}
             </Link>
           )}
           {!IS_PROD && isSuper && (
-            <Link
-              href="/superadmin"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
-            >
+            <Link href="/superadmin"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
               <span className="shrink-0">🧰</span>
               {!collapsed && <span>Superadmin</span>}
             </Link>
@@ -96,10 +89,7 @@ export default function Sidebar() {
         {/* bottom controls */}
         <div className="mt-auto pt-3 border-t" style={{ borderColor: "var(--bbb-lines)" }}>
           <div className="flex items-center justify-between">
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
-            >
+            <Link href="/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
               <User size={18} />
               {!collapsed && <span>Profile</span>}
             </Link>
