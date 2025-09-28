@@ -11,7 +11,9 @@ import { useSession } from "next-auth/react";
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const { data: session } = useSession();
+
+  // ⚠️ important: don't destructure directly from useSession()
+  const { data: session } = (useSession() ?? ({} as any));
   const role = (session?.user as any)?.role ?? "user";
   const canSeeAdmin = role === "admin" || role === "superadmin";
   const isSuper = role === "superadmin";
@@ -46,7 +48,7 @@ export default function Sidebar() {
         <div className="flex items-center justify-between mb-3">
           {!collapsed && <div className="text-sm font-semibold">Better Bite Buddy</div>}
           <button
-            className="rounded-md p-1 hover:bg-black/5 dark:hover:bg:white/5"
+            className="rounded-md p-1 hover:bg-black/5 dark:hover:bg-white/5"
             onClick={toggle}
             title={collapsed ? "Expand" : "Collapse"}
           >
@@ -59,8 +61,11 @@ export default function Sidebar() {
           {items.map(i => {
             const active = pathname === i.href;
             return (
-              <Link key={i.href} href={i.href}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 ${active ? "font-semibold" : ""}`}>
+              <Link
+                key={i.href}
+                href={i.href}
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5 ${active ? "font-semibold" : ""}`}
+              >
                 <span className="shrink-0">{i.icon}</span>
                 {!collapsed && <span>{i.label}</span>}
               </Link>
@@ -69,15 +74,19 @@ export default function Sidebar() {
 
           {/* admin shortcuts (preview/dev only) */}
           {!IS_PROD && canSeeAdmin && (
-            <Link href="/admin"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
+            >
               <span className="shrink-0">🛠️</span>
               {!collapsed && <span>Admin</span>}
             </Link>
           )}
           {!IS_PROD && isSuper && (
-            <Link href="/superadmin"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg:white/5">
+            <Link
+              href="/superadmin"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
+            >
               <span className="shrink-0">🧰</span>
               {!collapsed && <span>Superadmin</span>}
             </Link>
@@ -87,7 +96,10 @@ export default function Sidebar() {
         {/* bottom controls */}
         <div className="mt-auto pt-3 border-t" style={{ borderColor: "var(--bbb-lines)" }}>
           <div className="flex items-center justify-between">
-            <Link href="/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
+            <Link
+              href="/settings"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5"
+            >
               <User size={18} />
               {!collapsed && <span>Profile</span>}
             </Link>
