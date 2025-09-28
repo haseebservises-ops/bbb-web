@@ -1,27 +1,33 @@
+// app/auth/signin/page.tsx
 "use client";
 
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { useState } from "react";
 
 export default function SignIn() {
-  const [loading, setLoading] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const params = useSearchParams();
+  const callbackUrl = params.get("callbackUrl") ?? "/";
 
-  const go = async (provider: string) => {
+  async function loginWithEmail(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setBusy(true);
     try {
-      setLoading(provider);
-      // Send user back to home (or /dashboard) after login
-      await signIn(provider, { callbackUrl: "/" });
+      // IMPORTANT: our only working provider is "credentials"
+      await signIn("credentials", { email, redirect: true, callbackUrl });
     } finally {
-      setLoading(null);
+      setBusy(false);
     }
-  };
+  }
 
-  // If a provider isn't configured yet, we disable its button.
-  const canGoogle = true; // set to false if GOOGLE_ID/SECRET not set
-  const canX = false;     // flip to true after you add the Twitter/X provider
-  const canApple = false; // flip to true after Apple provider is configured
-  const canEmail = false; // flip to true after you wire Email provider (SMTP)
+  // These are placeholders for when you wire real OAuth providers later.
+  const canGoogle = false;
+  const canX = false;
+  const canApple = false;
 
   return (
     <div className="min-h-screen grid md:grid-cols-2 bg-black text-white">
@@ -43,32 +49,39 @@ export default function SignIn() {
           </div>
 
           <div className="space-y-3">
-            {/* X */}
+            {/* ✅ Email via Credentials (works today) */}
+            <form onSubmit={loginWithEmail} className="space-y-2">
+              <input
+                className="w-full rounded-full px-4 py-3 bg-transparent border border-gray-700 placeholder-gray-500"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
+              <button
+                type="submit"
+                disabled={!email.trim() || busy}
+                className={`w-full rounded-full py-3 font-medium border border-gray-600 hover:bg-gray-900 ${
+                  busy ? "opacity-60 cursor-wait" : ""
+                }`}
+              >
+                {busy ? "Signing in…" : "Continue with Email"}
+              </button>
+            </form>
+
+            {/* Placeholders for future providers */}
             <button
-              disabled={!canX || loading === "x"}
-              onClick={() => canX ? go("twitter") : null}
-              className={`w-full rounded-full py-3 font-medium
-                ${canX ? "bg-white text-black hover:bg-gray-200" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}
+              disabled={!canX}
+              className="w-full rounded-full py-3 font-medium bg-gray-800 text-gray-500 cursor-not-allowed"
+              title="X login not configured yet"
             >
               𝕏 &nbsp; Continue with X
             </button>
 
-            {/* Email */}
             <button
-              disabled={!canEmail || loading === "email"}
-              onClick={() => canEmail ? go("email") : null}
-              className={`w-full rounded-full py-3 font-medium border
-                ${canEmail ? "border-gray-600 hover:bg-gray-900" : "border-gray-800 text-gray-500 cursor-not-allowed"}`}
-            >
-              ✉️ &nbsp; Continue with Email
-            </button>
-
-            {/* Google */}
-            <button
-              disabled={!canGoogle || loading === "google"}
-              onClick={() => canGoogle ? go("google") : null}
-              className={`w-full rounded-full py-3 font-medium border
-                ${canGoogle ? "border-gray-600 hover:bg-gray-900" : "border-gray-800 text-gray-500 cursor-not-allowed"}`}
+              disabled={!canGoogle}
+              className="w-full rounded-full py-3 font-medium border border-gray-800 text-gray-500 cursor-not-allowed"
+              title="Google login not configured yet"
             >
               <span className="inline-block mr-2 align-middle">
                 <Image src="/google-icon.png" alt="Google" width={18} height={18} />
@@ -76,12 +89,10 @@ export default function SignIn() {
               Continue with Google
             </button>
 
-            {/* Apple */}
             <button
-              disabled={!canApple || loading === "apple"}
-              onClick={() => canApple ? go("apple") : null}
-              className={`w-full rounded-full py-3 font-medium border
-                ${canApple ? "border-orange-500 hover:bg-gray-900" : "border-gray-800 text-gray-500 cursor-not-allowed"}`}
+              disabled={!canApple}
+              className="w-full rounded-full py-3 font-medium border border-gray-800 text-gray-500 cursor-not-allowed"
+              title="Apple login not configured yet"
             >
               🍎 &nbsp; Continue with Apple
             </button>
@@ -93,10 +104,12 @@ export default function SignIn() {
         </div>
       </div>
 
-      {/* Right: subtle glow like Grok */}
+      {/* Right: subtle glow */}
       <div className="hidden md:flex items-center justify-center">
-        <div className="w-64 h-64 rounded-full blur-3xl opacity-20"
-             style={{ background: "radial-gradient(#8a7cff, transparent 60%)" }} />
+        <div
+          className="w-64 h-64 rounded-full blur-3xl opacity-20"
+          style={{ background: "radial-gradient(#8a7cff, transparent 60%)" }}
+        />
       </div>
     </div>
   );
