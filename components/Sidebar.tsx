@@ -1,3 +1,4 @@
+// components/Sidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -5,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import ThemeToggle from "@/app/components/ThemeToggle";
-import { MessageSquare, Clock, Settings, Crown, ChevronRight, ChevronLeft, User } from "lucide-react";
+import { MessageSquare, Clock, Settings, ChevronRight, ChevronLeft, User } from "lucide-react";
 import { IS_PROD } from "@/lib/env";
 
 export default function Sidebar() {
@@ -35,7 +36,7 @@ export default function Sidebar() {
     { href: "/", label: "New chat", icon: <MessageSquare size={18} /> },
     { href: "/history", label: "Chat history", icon: <Clock size={18} /> },
     { href: "/settings", label: "Settings", icon: <Settings size={18} /> },
-    { href: "/upgrade", label: "Upgrade", icon: <Crown size={18} /> },
+    // Upgrade removed per your request
   ];
 
   return (
@@ -46,7 +47,19 @@ export default function Sidebar() {
       <div className="p-3 w-full flex flex-col">
         {/* top row */}
         <div className="flex items-center justify-between mb-3">
-          {!collapsed && <div className="text-sm font-semibold">Better Bite Buddy</div>}
+          {!collapsed && (
+            <div className="flex items-center gap-2">
+              {/* simple <img> avoids next/image config */}
+              <img
+                src="https://storage.googleapis.com/msgsndr/ROvsrlVUnHQifEIiaP7S/media/68b8a556bd7b76c153bb1800.png"
+                alt="Better Bite Buddy"
+                width={20}
+                height={20}
+                className="rounded"
+              />
+              <div className="text-sm font-semibold">Better Bite Buddy</div>
+            </div>
+          )}
           <button
             className="rounded-md p-1 hover:bg-black/5 dark:hover:bg-white/5"
             onClick={toggle}
@@ -69,7 +82,7 @@ export default function Sidebar() {
             );
           })}
 
-          {/* Admin shortcuts (non‑prod only) */}
+          {/* Admin shortcuts (non-prod only) */}
           {!IS_PROD && canSeeAdmin && (
             <Link href="/admin"
               className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-black/5 dark:hover:bg-white/5">
