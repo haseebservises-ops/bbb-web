@@ -10,7 +10,6 @@ export default function Page() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // allow reopening the form programmatically if you ever need it
     (window as any).bbbOpenOnboarding = () => {
       localStorage.removeItem("bbb_onboarding_dismissed");
       setShowGate(true);
@@ -22,8 +21,10 @@ export default function Page() {
   }, []);
 
   return (
-    <div className="w-full h-screen">       {/* full-height area */}
-      <PickaxeEmbed className="w-full h-full" />   {/* script embed should render here */}
+    <main className="relative min-h-screen">
+      {/* Pickaxe takes the whole center panel */}
+      <PickaxeEmbed className="absolute inset-0" />
+
       {showGate && (
         <OnboardingGate
           onComplete={() => {
@@ -34,6 +35,6 @@ export default function Page() {
           }}
         />
       )}
-    </div>
+    </main>
   );
 }
