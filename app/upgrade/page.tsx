@@ -1,9 +1,10 @@
+// app/upgrade/page.tsx
 export default function UpgradePage() {
   const plans = [
     {
       name: "Better Bite Buddy™ Core (Monthly)",
       price: "$10/mo",
-      url: process.env.NEXT_PUBLIC_CORE_MONTHLY, // Payment Link URL
+      url: process.env.NEXT_PUBLIC_CORE_MONTHLY, // Stripe Payment Link URL
     },
     {
       name: "Better Bite Buddy™ Core (Annual)",
@@ -20,7 +21,7 @@ export default function UpgradePage() {
       price: "$150/yr",
       url: process.env.NEXT_PUBLIC_CORE_PREMIUM_ANNUAL,
     },
-  ].filter(p => !!p.url);
+  ].filter((p) => !!p.url);
 
   return (
     <main className="max-w-4xl mx-auto p-6 grid gap-6">
@@ -30,12 +31,16 @@ export default function UpgradePage() {
           <div key={p.name} className="rounded-2xl border p-5 shadow-sm">
             <div className="text-lg font-bold">{p.name}</div>
             <div className="text-slate-600 mb-4">{p.price}</div>
-            <button
-              onClick={() => window.open(p.url as string, "_blank", "noopener,noreferrer")}
-              className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold hover:brightness-110"
+
+            {/* No onClick here; just an anchor to Stripe */}
+            <a
+              href={p.url as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-4 py-2 rounded-xl bg-violet-600 text-white font-bold hover:brightness-110"
             >
               Checkout with Stripe
-            </button>
+            </a>
           </div>
         ))}
       </div>
