@@ -4,6 +4,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+
+
+          // at top of the component, near other state/util vars
+          const activityPresetMeals: Record<number, number> = {
+            1: 2, // Low
+            2: 3, // Light
+            3: 4, // Moderate
+            4: 5, // High
+          };
 /* ------------------------------- Props & Keys ------------------------------- */
 type WizardProps = {
   autoOpen?: boolean;
@@ -370,18 +379,24 @@ export default function OnboardingWizard({ autoOpen = false, onClose, onComplete
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-slate-600">Activity level</label>
           <div className="grid grid-cols-4 gap-2">
-            {["Low", "Light", "Moderate", "High"].map((t, i) => (
-              <button
-                key={t}
-                onClick={() => setActivity(i + 1)}
-                className={cn(
-                  "rounded-xl p-3 border text-sm",
-                  activity === i + 1 && "ring-4 ring-violet-200 border-violet-400 font-bold"
-                )}
-              >
-                {t}
-              </button>
-            ))}
+            {["Low", "Light", "Moderate", "High"].map((t, i) => {
+              const level = i + 1;
+              return (
+                <button
+                  key={t}
+                  onClick={() => {
+                    setActivity(level);
+                    setMealsPerDay(activityPresetMeals[level]); // <— keep slider in sync
+                  }}
+                  className={cn(
+                    "rounded-xl p-3 border text-sm transition-all",
+                    activity === level && "ring-4 ring-violet-200 border-violet-400 font-bold shadow-sm"
+                  )}
+                >
+                  {t}
+                </button>
+              );
+            })}
           </div>
         </div>
 
