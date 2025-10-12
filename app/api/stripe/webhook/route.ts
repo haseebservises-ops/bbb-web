@@ -1,73 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-export const runtime = "nodejs";
+export const runtime = "nodejs"; // make sure this runs on Node, not Edge
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
-// ✅ do this (no apiVersion)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Keep exactly ONE Stripe client
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
-async function grantOnPickaxe(opts: {
-  email: string;
-  pickaxeProductId: string;
-}) {
-  // IMPORTANT: replace URL + payload to match Pickaxe’s “grant/gift product” endpoint.
-  // Ask Pickaxe support for the exact endpoint if you don’t already have it.
-  // The shape below is a reasonable starter.
-  await fetch("https://api.pickaxe.co/v1/studio/memberships/grant", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "authorization": `Bearer ${process.env.PICKAXE_API_TOKEN}`,
-    },
-    body: JSON.stringify({
-      studioId: process.env.PICKAXE_STUDIO_ID,
-      userEmail: opts.email,
-      productId: opts.pickaxeProductId,
-    }),
-  });
-}
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
 export async function POST(req: NextRequest) {
-  const sig = req.headers.get("stripe-signature")!;
-  const buf = await req.text();
+  const sig = req.headers.get("stripe-signature") ?? "";
+  const body = await req.text();
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
-      buf,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    // Verify signature if the secret is set
+    event = endpointSecret
+      ? stripe.webhooks.constructEvent(body, sig, endpointSecret)
+      : (JSON.parse(body) as Stripe.Event); // (fallback for local mocks)
   } catch (err: any) {
-    return new NextResponse(`Webhook signature verification failed. ${err.message}`, { status: 400 });
+    console.error("Webhook signature verification failed:", err?.message);
+    return new NextResponse(`Webhook Error: ${err?.message ?? "invalid signature"}`, { status: 400 });
   }
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const email =
-          (session.customer_details?.email ||
-            (session.metadata?.email ?? "")).trim().toLowerCase();
-
-        const pickaxeProductId = session.metadata?.pickaxeProductId;
-        if (email && pickaxeProductId) {
-          await grantOnPickaxe({ email, pickaxeProductId });
-        }
+        // TODO: grant entitlement (Pickaxe, DB, etc.) using session.customer / metadata
         break;
       }
-
-      // (optional) handle subscription updates/cancellations to downgrade
-      case "customer.subscription.deleted":
-      case "invoice.payment_failed": {
-        // You could revoke/downgrade here if you maintain entitlements.
+      case "invoice.payment_succeeded": {
+        // TODO: ensure user retains access
         break;
       }
+      case "customer.subscription.deleted": {
+        // TODO: revoke/adjust access
+        break;
+      }
+      default:
+        // no-op
+        break;
     }
-  } catch (err: any) {
-    // Return 200 so Stripe doesn’t keep retrying forever; log the error.
-    console.error("Webhook error", err);
+  } catch (e) {
+    console.error("Webhook handler error:", e);
+    return NextResponse.json({ received: true, handled: false }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });
