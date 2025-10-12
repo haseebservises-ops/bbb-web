@@ -23,3 +23,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+// components/UpgradeButton.tsx
+"use client";
+
+export default function UpgradeButton() {
+  const portal = process.env.NEXT_PUBLIC_PICKAXE_PORTAL_URL || "https://betterbitebuddy.com";
+  return (
+    <button
+      onClick={() => window.open(portal, "_blank", "noopener,noreferrer")}
+      className="fixed bottom-5 right-5 z-[9999] rounded-full px-5 py-3 font-bold shadow-xl bg-violet-600 text-white hover:brightness-110"
+    >
+      Upgrade
+    </button>
+  );
+}

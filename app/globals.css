@@ -293,3 +293,4 @@ select:focus{ box-shadow: var(--ring-outer); outline: none; }
   min-height: 100% !important;
   display: block;
 }
+.bbb-neuro { letter-spacing: .2px; line-height: 1.6; }

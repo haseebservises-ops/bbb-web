@@ -1,23 +1,35 @@
 // app/api/pickaxe/onboarding-complete/route.ts
-export async function POST(req: Request) {
+import { NextRequest, NextResponse } from "next/server";
+
+const BASE = "https://api.pickaxe.co/v1";
+
+async function px(path: string, init: RequestInit = {}) {
+  const headers = {
+    "content-type": "application/json",
+    Authorization: `Bearer ${process.env.PICKAXE_API_KEY!}`,
+    ...(init.headers || {}),
+  } as Record<string, string>;
+  const res = await fetch(`${BASE}${path}`, { ...init, headers });
+  if (!res.ok && res.status !== 204) throw new Error(`${res.status} ${path}`);
+  return res.status === 204 ? null : res.json();
+}
+
+async function getMemoryIdByTitle(title: string) {
+  const list = await px(`/studio/memory/list?skip=0&take=100`, { method: "GET" }) as any;
+  const all = Array.isArray(list?.memories) ? list.memories : (list?.data || list || []);
+  const found = all.find((m: any) => (m.memory || m.title) === title);
+  if (!found?.id) throw new Error(`Memory not found by title: ${title}`);
+  return found.id as string;
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const { email, name, goal, motivation, mealsPerDay, activity, answers, scores, dominant } = await req.json();
-    if (!email) return new Response(JSON.stringify({ ok: false, error: "email required" }), { status: 400 });
+    const body = await req.json();
+    const { email, name, goal, motivation, mealsPerDay, activity, answers, scores, dominant } = body || {};
+    if (!email) return NextResponse.json({ ok: false, error: "email required" }, { status: 400 });
 
-    const BASE = "https://api.pickaxe.co/v1";
-    async function px(path: string, init: RequestInit = {}) {
-      const headers = {
-        "content-type": "application/json",
-        authorization: `Bearer ${process.env.PICKAXE_API_KEY!}`,
-        ...init.headers,
-      } as Record<string, string>;
-      const res = await fetch(`${BASE}${path}`, { ...init, headers });
-      if (!res.ok && res.status !== 204) throw new Error(`${res.status} ${path}`);
-      return res.status === 204 ? null : res.json();
-    }
-
-    // 1) Ensure user exists (and attach your default free plan if you want)
-    const defaultProduct = process.env.PICKAXE_DEFAULT_PRODUCT_ID || ""; // Starter Free
+    // 1) Ensure user exists (and attach default product)
+    const defaultProduct = process.env.PICKAXE_DEFAULT_PRODUCT_ID;
     await px(`/studio/user/create`, {
       method: "POST",
       body: JSON.stringify({
@@ -28,60 +40,58 @@ export async function POST(req: Request) {
       }),
     });
 
-    // 2) (Optional) grant onboarding bonus
-    if (process.env.PICKAXE_BONUS_PRODUCT_ID) {
-      await px(`/studio/memberships/grant`, {
-        method: "POST",
-        body: JSON.stringify({
-          studioId: process.env.PICKAXE_STUDIO_ID || "",
-          userEmail: email,
-          productId: process.env.PICKAXE_BONUS_PRODUCT_ID,
-        }),
-      });
-    }
+    // 2) Upsert memories by title
+    const profileTitle = "BBB: primary_focus + archetype + goals (slugs only)";
+    const routeTitle   = "Store archetype for routing";
+    const profileId = await getMemoryIdByTitle(profileTitle);
+    const routeId   = await getMemoryIdByTitle(routeTitle);
 
-    // 3) Upsert memories by title
-    const TITLES = {
-      profileJson: "BBB: primary_focus + archetype + goals (slugs only)",
-      archetype: "Store archetype for routing",
-    } as const;
+    const enc = encodeURIComponent(email);
 
-    const memCache = new Map<string, string>();
-    async function getMemoryIdByTitle(title: string) {
-      if (memCache.has(title)) return memCache.get(title)!;
-      const list = (await px(`/studio/memory/list?skip=0&take=100`, { method: "GET" })) as any;
-      const items = Array.isArray(list?.memories) ? list.memories : list?.data || list || [];
-      const found = items.find((m: any) => (m.memory || m.title) === title);
-      if (!found?.id) throw new Error(`Memory not found by title: ${title}`);
-      memCache.set(title, found.id);
-      return found.id;
-    }
-
-    const encEmail = encodeURIComponent(email);
-
-    // Merge into the JSON memory
-    const profileId = await getMemoryIdByTitle(TITLES.profileJson);
-    const profilePayload = {
-      primary_focus: goal || "",            // keep the contract simple
-      archetype: dominant || "",            // or goal → your choice
+    const profileJson = {
+      primary_focus: goal ? (goal === "exec" ? "clarity" : goal === "yo_yo_ozempic" ? "metabolic" : "clarity") : null,
+      archetype: dominant || goal || "",
       goals: [goal].filter(Boolean),
-      onboarding: { motivation, mealsPerDay, activity, answers, scores, dominant },
+      onboarding: {
+        motivation,
+        meals_per_day: mealsPerDay,
+        activity_level: activity,
+        answers,
+        scores,
+        dominant,
+        name: name || "",
+      },
     };
-    await px(`/studio/memory/user/${encEmail}/${profileId}`, {
+
+    await px(`/studio/memory/user/${enc}/${profileId}`, {
       method: "PATCH",
-      body: JSON.stringify({ data: { value: JSON.stringify(profilePayload) } }),
+      body: JSON.stringify({ data: { value: JSON.stringify(profileJson) } }),
     });
 
-    // Keep the archetype slug synced in the second memory
-    const archId = await getMemoryIdByTitle(TITLES.archetype);
-    await px(`/studio/memory/user/${encEmail}/${archId}`, {
+    await px(`/studio/memory/user/${enc}/${routeId}`, {
       method: "PATCH",
       body: JSON.stringify({ data: { value: (dominant || goal || "") } }),
     });
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
-  } catch (e: any) {
-    console.error(e);
-    return new Response(JSON.stringify({ ok: false, error: e.message || String(e) }), { status: 500 });
+    // 3) Optional: grant onboarding bonus product
+    if (process.env.PICKAXE_BONUS_PRODUCT_ID) {
+      const user = await px(`/studio/user/${enc}`, { method: "GET" }) as any;
+      const products = Array.from(new Set([...(user?.products || []), process.env.PICKAXE_BONUS_PRODUCT_ID]));
+      await px(`/studio/user/${enc}`, { method: "PATCH", body: JSON.stringify({ data: { products } }) });
+    }
+
+    // 4) Optional: forward to GHL / Zapier webhook
+    if (process.env.GHL_UPDATE_WEBHOOK) {
+      await fetch(process.env.GHL_UPDATE_WEBHOOK, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, name, goal, motivation, mealsPerDay, activity, answers, scores, dominant }),
+      }).catch(() => {});
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error("onboarding-complete error", err);
+    return NextResponse.json({ ok: false, error: String(err?.message || err) }, { status: 500 });
   }
 }
