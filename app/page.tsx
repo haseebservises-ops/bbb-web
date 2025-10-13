@@ -13,7 +13,6 @@ export default function Page() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // manual open via console:
     (window as any).bbbOpenOnboarding = () => {
       localStorage.removeItem("bbb_onboarding_dismissed_v1");
       setShowWizard(true);
@@ -28,13 +27,12 @@ export default function Page() {
 
   return (
     <main className="relative min-h-[100svh]">
-      {/* CONTENT: on mobile we add bottom padding so the mobile bar never covers the iframe composer.
-         On desktop we keep it absolute/full-bleed. */}
-      <div className="pb-[calc(56px+env(safe-area-inset-bottom,0px))] md:pb-0 md:absolute md:inset-0">
+      {/* On mobile (default), this is STATIC with bottom padding so the bar never covers the composer.
+          On ≥sm, it becomes absolute/inset-0 to keep your desktop layout untouched. */}
+      <div className="pb-[calc(56px+env(safe-area-inset-bottom,0px))] sm:pb-0 sm:absolute sm:inset-0">
         <PickaxeEmbed />
       </div>
 
-      {/* Onboarding overlay */}
       {showWizard && (
         <OnboardingWizard
           autoOpen
@@ -50,7 +48,7 @@ export default function Page() {
         />
       )}
 
-      {/* mobile-only bottom bar + desktop-only FAB */}
+      {/* Mobile bottom bar + Desktop FAB */}
       <MobileUpgradeBar />
       <UpgradeFab />
     </main>
