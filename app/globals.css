@@ -294,3 +294,23 @@ select:focus{ box-shadow: var(--ring-outer); outline: none; }
   display: block;
 }
 .bbb-neuro { letter-spacing: .2px; line-height: 1.6; }
+/* globals.css */
+:root {
+  --composer-h: 64px; /* your actual composer height */
+}
+
+.pb-composer {
+  padding-bottom: calc(var(--composer-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* For pages that should fill the screen properly under mobile browsers */
+.min-h-screen-fix {
+  min-height: 100svh; /* better than 100vh on mobile */
+}
+:root{
+  /* match your actual composer height (input + buttons row) */
+  --composer-h: 64px;
+}
+
+/* optional utility if you need it on a container: */
+.min-h-screen-fix { min-height: 100svh; }
