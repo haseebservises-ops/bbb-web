@@ -4,8 +4,8 @@
 import { useEffect, useState } from "react";
 import PickaxeEmbed from "@/components/PickaxeEmbed";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import UpgradeFab from "@/components/UpgradeFab";
-import MobileUpgradeBar from "@/components/MobileUpgradeBar";
+// import UpgradeFab from "@/components/UpgradeFab";
+// import MobileUpgradeBar from "@/components/MobileUpgradeBar";
 
 export default function Page() {
   const [showWizard, setShowWizard] = useState(false);
@@ -49,8 +49,8 @@ export default function Page() {
       )}
 
       {/* Mobile bottom bar + Desktop FAB */}
-      <MobileUpgradeBar />
-      <UpgradeFab />
+      {/* <MobileUpgradeBar />
+      <UpgradeFab /> */}
     </main>
   );
 }
