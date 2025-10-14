@@ -4,12 +4,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-// NEW: snacks + stats
-const [snacksPerDay, setSnacksPerDay] = useState<number>(0); // 0..3
-const [heightIn, setHeightIn]       = useState<number | "">("");
-const [weightLb, setWeightLb]       = useState<number | "">("");
-const [age, setAge]                 = useState<number | "">("");
-
 // LS keys (additions are optional but nice to keep)
 // whenever you save, mirror to localStorage
 
@@ -177,6 +171,10 @@ export default function OnboardingWizard({ autoOpen = false, onClose, onComplete
   const [open, setOpen] = useState<boolean>(autoOpen);
   const [step, setStep] = useState<number>(0);
   const [otherGoalText, setOtherGoalText] = useState("");
+  const [snacksPerDay, setSnacksPerDay] = useState(0);
+  const [heightIn, setHeightIn] = useState<number | "">("");
+  const [weightLb, setWeightLb] = useState<number | "">("");
+  const [age, setAge] = useState<number | "">("");
 
   // core state
   const [goal, setGoal] = useState<ArchetypeSlug | "">("");
