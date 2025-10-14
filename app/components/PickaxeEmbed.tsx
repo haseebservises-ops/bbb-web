@@ -41,3 +41,18 @@ export default function PickaxeEmbed({ className = "" }: Props) {
     </div>
   );
 }
+useEffect(() => {
+  function onMsg(e: MessageEvent) {
+    const d: any = e.data;
+    // try common shapes
+    const maybe =
+      d?.email ||
+      d?.user?.email ||
+      (d?.type && /user/i.test(d.type) && (d?.payload?.email || d?.data?.email));
+    if (maybe && typeof maybe === "string") {
+      try { localStorage.setItem("bbb_email", maybe); } catch {}
+    }
+  }
+  window.addEventListener("message", onMsg);
+  return () => window.removeEventListener("message", onMsg);
+}, []);

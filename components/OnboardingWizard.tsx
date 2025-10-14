@@ -4,7 +4,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
+// NEW: snacks + stats
+const [snacksPerDay, setSnacksPerDay] = useState<number>(0); // 0..3
+const [heightIn, setHeightIn]       = useState<number | "">("");
+const [weightLb, setWeightLb]       = useState<number | "">("");
+const [age, setAge]                 = useState<number | "">("");
 
+// LS keys (additions are optional but nice to keep)
+// whenever you save, mirror to localStorage
 
           // at top of the component, near other state/util vars
           const activityPresetMeals: Record<number, number> = {
@@ -24,6 +31,7 @@ const LS_KEYS = {
   dismissed: "bbb_onboarding_dismissed_v1",
   email: "bbb_email",
 };
+
 
 /* --------------------------------- Types ---------------------------------- */
 type ArchetypeSlug = "exec" | "yo_yo_ozempic" | "longevity_seeker" | "other";
@@ -151,12 +159,12 @@ function resultCopy(slug: ArchetypeSlug) {
       coach: "Resilient Strategist",
       reframe: "You don’t need to push harder — just steadier. Two tiny anchors beat a perfect day.",
     };
-  if (slug === "yo_yo_ozempic")
-    return {
-      critic: "All-or-Nothing Gremlin",
-      coach: "Calm Reset Navigator",
-      reframe: "Cravings lose when resets are easy and immediate. One small win tonight beats a restart next week.",
-    };
+    if (slug === "yo_yo_ozempic")
+      return {
+        critic: "All-or-Nothing (inner critic)",
+        coach: "Calm Reset Coach",
+        reframe: "Cravings lose when resets are easy and immediate. One small win tonight beats a restart next week.",
+      };
   return {
     critic: "Longevity Perfectionist",
     coach: "Data-Wise Guide",
@@ -168,6 +176,7 @@ function resultCopy(slug: ArchetypeSlug) {
 export default function OnboardingWizard({ autoOpen = false, onClose, onComplete }: WizardProps) {
   const [open, setOpen] = useState<boolean>(autoOpen);
   const [step, setStep] = useState<number>(0);
+  const [otherGoalText, setOtherGoalText] = useState("");
 
   // core state
   const [goal, setGoal] = useState<ArchetypeSlug | "">("");
@@ -230,25 +239,67 @@ export default function OnboardingWizard({ autoOpen = false, onClose, onComplete
   }
 
   async function finish() {
+  try {
+    setSubmitting(true);
+
+    // 1) compute result like before
+    const { scores, dominant } = computeScores();
+
+    // 2) build payload (nulls instead of "")
+        const payload = {
+          email,
+          name,
+          goal,
+          otherGoalText: goal === "other" ? otherGoalText : null,
+          motivation,
+
+          mealsPerDay,
+          snacksPerDay,
+          activity,
+
+          heightIn:  heightIn  === "" ? null : heightIn,
+          weightLb:  weightLb  === "" ? null : weightLb,
+          age:       age       === "" ? null : age,
+
+          answers,
+          scores,
+          dominant,
+        };
+
+    // 3) persist to localStorage so Profile can read immediately
     try {
-      setSubmitting(true);
-      const { scores, dominant } = computeScores();
-      const payload = { email, name, goal, motivation, mealsPerDay, activity, answers, scores, dominant };
-      await fetch("/api/pickaxe/onboarding-complete", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      localStorage.setItem(LS_KEYS.dismissed, "1");
-      setStep(FINAL_LAUNCH_STEP); // go to “All set / open login”
-      onComplete?.();
-    } catch (e) {
-      console.error(e);
-      alert("Could not save onboarding. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
+      localStorage.setItem("bbb_onboarded", "1");
+      localStorage.setItem("bbb_meals", String(mealsPerDay));
+      localStorage.setItem("bbb_snacks", String(snacksPerDay));
+      localStorage.setItem("bbb_activity", String(activity));
+      if (name)     localStorage.setItem("bbb_name", name);
+      if (email)    localStorage.setItem("bbb_email", email);
+      if (heightIn !== "") localStorage.setItem("bbb_height_in", String(heightIn));
+      if (weightLb !== "") localStorage.setItem("bbb_weight_lb", String(weightLb));
+      if (age      !== "") localStorage.setItem("bbb_age", String(age));
+    } catch {}
+
+    // 4) send to your API (you already had this route)
+    await fetch("/api/pickaxe/onboarding-complete", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    // 5) stop auto-opening next time
+    localStorage.setItem(LS_KEYS.dismissed, "1");
+
+    // 6) advance to the “open login” step
+    setStep(FINAL_LAUNCH_STEP);
+    onComplete?.();
+  } catch (e) {
+    console.error(e);
+    alert("Could not save onboarding. Please try again.");
+  } finally {
+    setSubmitting(false);
   }
+}
+
 
   // Close automatically 3s after gratitude step appears
   useEffect(() => {
@@ -293,41 +344,64 @@ export default function OnboardingWizard({ autoOpen = false, onClose, onComplete
       </motion.div>
     );
 
-    // 1: Goal
-    if (step === 1) return (
-      <motion.div key="goals" variants={variants} initial="enter" animate="center" exit="exit" className="grid gap-4">
-        <div className="text-xl md:text-2xl font-extrabold">Choose your focus</div>
-        <div className="grid sm:grid-cols-3 gap-3">
-          {[
-            { slug: "exec", title: "Steadier energy", sub: "Busy exec / burned out" },
-            { slug: "yo_yo_ozempic", title: "Craving control", sub: "Yo-yo dieter" },
-            { slug: "longevity_seeker", title: "Longevity & clarity", sub: "Health span seeker" },
-          ].map((g) => (
-            <button
-              key={g.slug}
-              onClick={() => setGoal(g.slug as ArchetypeSlug)}
-              className={cn(
-                "text-left rounded-2xl p-4 border transition",
-                goal === g.slug ? "ring-4 ring-violet-200 border-violet-400" : "hover:shadow-md"
-              )}
-            >
-              <div className="font-bold">{g.title}</div>
-              <div className="text-sm text-slate-600">{g.sub}</div>
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-between pt-1">
-          <button onClick={back} className="text-slate-500">Back</button>
-          <button
-            onClick={() => goal && next()}
-            disabled={!goal}
-            className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold disabled:opacity-40"
-          >
-            Next
-          </button>
-        </div>
-      </motion.div>
-    );
+// 1: Goal
+if (step === 1) return (
+  <motion.div key="goals" variants={variants} initial="enter" animate="center" exit="exit" className="grid gap-4">
+    <div className="text-xl md:text-2xl font-extrabold">Choose your focus</div>
+
+    <div className="grid sm:grid-cols-3 gap-3">
+      {[
+        { slug: "exec",             title: "Steadier energy",     sub: "Busy exec / burned out" },
+        { slug: "yo_yo_ozempic",    title: "Craving control",     sub: "Yo-yo dieter" },
+        { slug: "longevity_seeker", title: "Longevity & clarity", sub: "Health span seeker" },
+      ].map((g) => (
+        <button
+          key={g.slug}
+          onClick={() => setGoal(g.slug as any)}
+          className={cn(
+            "text-left rounded-2xl p-4 border transition",
+            goal === g.slug ? "ring-4 ring-violet-200 border-violet-400" : "hover:shadow-md"
+          )}
+        >
+          <div className="font-bold">{g.title}</div>
+          <div className="text-sm text-slate-600">{g.sub}</div>
+        </button>
+      ))}
+
+      {/* NEW: Something else */}
+      <button
+        onClick={() => setGoal("other")}
+        className={cn(
+          "text-left rounded-2xl p-4 border transition",
+          goal === "other" ? "ring-4 ring-violet-200 border-violet-400" : "hover:shadow-md"
+        )}
+      >
+        <div className="font-bold">Something else</div>
+        <div className="text-sm text-slate-600">Tell us what you’re after</div>
+
+        {goal === "other" && (
+          <input
+            value={otherGoalText}
+            onChange={(e) => setOtherGoalText(e.target.value)}
+            placeholder="Briefly describe your focus"
+            className="mt-3 w-full rounded-xl border p-2 text-sm"
+          />
+        )}
+      </button>
+    </div>
+
+    <div className="flex justify-between pt-1">
+      <button onClick={back} className="text-slate-500">Back</button>
+      <button
+        onClick={() => goal && next()}
+        disabled={!goal || (goal === "other" && !otherGoalText.trim())}
+        className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold disabled:opacity-40"
+      >
+        Next
+      </button>
+    </div>
+  </motion.div>
+);
 
     // 2: Motivation
     if (step === 2) return (
@@ -361,6 +435,63 @@ export default function OnboardingWizard({ autoOpen = false, onClose, onComplete
           onChange={(e) => setName(e.target.value)}
           className="rounded-2xl border p-3"
         />
+          // ...inside step === 3
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-slate-600">
+              Meals per day: <span className="font-bold text-slate-800">{mealsPerDay}</span>
+            </label>
+            <input
+              type="range"
+              min={1}
+              max={6}
+              value={mealsPerDay}
+              onChange={(e) => setMealsPerDay(+e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+          {/* NEW: Snacks per day */}
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-slate-600">
+              Snacks per day: <span className="font-bold text-slate-800">{snacksPerDay}</span>
+            </label>
+            <input
+              type="range"
+              min={0}
+              max={3}
+              value={snacksPerDay}
+              onChange={(e) => setSnacksPerDay(+e.target.value)}
+              className="w-full"
+            />
+          </div>
+
+                  <div className="grid gap-2">
+                    <label className="text-sm font-semibold text-slate-600">Activity level</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {["Low", "Light", "Moderate", "High"].map((t, i) => {
+                        const level = i + 1;
+                        return (
+                          <button
+                            key={t}
+                            onClick={() => setActivity(level)} // ← NO meals side-effect anymore
+                            className={cn(
+                              "rounded-xl p-3 border text-sm transition-all",
+                              activity === level && "ring-4 ring-violet-200 border-violet-400 font-bold shadow-sm"
+                            )}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between pt-1">
+                    <button onClick={back} className="text-slate-500">Back</button>
+                    <button onClick={() => setStep(3.5 as any)} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
+                      Start 60-second quiz
+                    </button>
+                  </div>
 
         <div className="grid gap-2">
           <label className="text-sm font-semibold text-slate-600">
@@ -408,6 +539,62 @@ export default function OnboardingWizard({ autoOpen = false, onClose, onComplete
         </div>
       </motion.div>
     );
+        const TOTAL = 5 + questions.length + 2;  // +1 for stats screen
+        const FINAL_RESULT_STEP = 5 + questions.length;   // moved by +1
+        const FINAL_LAUNCH_STEP = FINAL_RESULT_STEP + 1;
+        const FINAL_GRAT_STEP   = FINAL_RESULT_STEP + 2;
+        
+// 3.5: Stats (height/weight/age in Imperial)
+if (step === (3.5 as any)) return (
+  <motion.div key="stats" variants={variants} initial="enter" animate="center" exit="exit" className="grid gap-6">
+    <div className="text-xl md:text-2xl font-extrabold">Your stats</div>
+
+    <div className="grid gap-2 sm:grid-cols-3">
+      <label className="grid gap-1">
+        <span className="text-sm font-semibold text-slate-600">Height (inches)</span>
+        <input
+          type="number"
+          min={48} max={84}
+          value={heightIn}
+          onChange={(e) => setHeightIn(e.target.value === "" ? "" : +e.target.value)}
+          className="rounded-2xl border p-3"
+          placeholder="e.g. 70"
+        />
+      </label>
+
+      <label className="grid gap-1">
+        <span className="text-sm font-semibold text-slate-600">Weight (lb)</span>
+        <input
+          type="number"
+          min={70} max={600}
+          value={weightLb}
+          onChange={(e) => setWeightLb(e.target.value === "" ? "" : +e.target.value)}
+          className="rounded-2xl border p-3"
+          placeholder="e.g. 180"
+        />
+      </label>
+
+      <label className="grid gap-1">
+        <span className="text-sm font-semibold text-slate-600">Age</span>
+        <input
+          type="number"
+          min={13} max={100}
+          value={age}
+          onChange={(e) => setAge(e.target.value === "" ? "" : +e.target.value)}
+          className="rounded-2xl border p-3"
+          placeholder="e.g. 42"
+        />
+      </label>
+    </div>
+
+    <div className="flex justify-between pt-1">
+      <button onClick={() => setStep(3)} className="text-slate-500">Back</button>
+      <button onClick={next} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
+        Continue
+      </button>
+    </div>
+  </motion.div>
+);
 
     // 4..13: 10 Questions
     const qIndex = step - 4;

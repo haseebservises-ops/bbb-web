@@ -1,171 +1,151 @@
 "use client";
-
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+
+type Units = "imperial" | "metric";
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [units, setUnits] = useState<"metric" | "imperial">("metric");
-  const [tags, setTags] = useState<string>(""); // comma separated
+  const [displayName, setDisplayName] = useState("");
+  const [units, setUnits] = useState<Units>("imperial");
+
+  const [heightIn, setHeightIn] = useState<number | "">("");
+  const [weightLb, setWeightLb] = useState<number | "">("");
+  const [age, setAge] = useState<number | "">("");
+  const [tags, setTags] = useState("");
 
   useEffect(() => {
-    const e = localStorage.getItem("bbb_email") || "";
-    const n = localStorage.getItem("bbb_profile_name") || "";
-    const u = (localStorage.getItem("bbb_units") as "metric" | "imperial") || "metric";
-    const t = localStorage.getItem("bbb_diet_tags") || "";
-    setEmail(e);
-    setName(n);
-    setUnits(u);
-    setTags(t);
-  }, []);
+    // email
+    const lsEmail = typeof window !== "undefined" ? localStorage.getItem("bbb_email") || "" : "";
+    setEmail((session?.user?.email as string) || lsEmail || "");
+
+    // name
+    const lsName = localStorage.getItem("bbb_name") || "";
+    setDisplayName(lsName);
+
+    // units
+    setUnits((localStorage.getItem("bbb_units") as Units) || "imperial");
+
+    // stats
+    const toNum = (x: string | null) => (x && !isNaN(+x) ? +x : "");
+    setHeightIn(toNum(localStorage.getItem("bbb_height_in")));
+    setWeightLb(toNum(localStorage.getItem("bbb_weight_lb")));
+    setAge(toNum(localStorage.getItem("bbb_age")));
+
+    // tags
+    setTags(localStorage.getItem("bbb_tags") || "");
+  }, [session?.user?.email]);
 
   function save() {
-    localStorage.setItem("bbb_profile_name", name);
+    if (email) localStorage.setItem("bbb_email", email);
+    localStorage.setItem("bbb_name", displayName || "");
     localStorage.setItem("bbb_units", units);
-    localStorage.setItem("bbb_diet_tags", tags);
-    alert("Saved!");
+    if (heightIn !== "") localStorage.setItem("bbb_height_in", String(heightIn));
+    if (weightLb !== "") localStorage.setItem("bbb_weight_lb", String(weightLb));
+    if (age      !== "") localStorage.setItem("bbb_age", String(age));
+    localStorage.setItem("bbb_tags", tags || "");
+
+    alert("Saved.");
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-extrabold mb-4">Profile</h1>
+    <div className="max-w-3xl mx-auto p-6 grid gap-6">
+      <h1 className="text-2xl font-extrabold">Profile</h1>
 
-      <label className="block text-sm font-semibold text-slate-600 mb-1">Email</label>
-      <input value={email} readOnly className="w-full rounded-xl border p-3 bg-slate-50 mb-4" />
+      <label className="grid gap-1">
+        <span className="text-sm font-semibold">Email</span>
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-2xl border p-3"
+          placeholder="name@example.com"
+        />
+        <span className="text-xs text-slate-500">Pulled from Pickaxe/Sign-in when available.</span>
+      </label>
 
-      <label className="block text-sm font-semibold text-slate-600 mb-1">Display name</label>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Your name"
-        className="w-full rounded-xl border p-3 mb-4"
-      />
+      <label className="grid gap-1">
+        <span className="text-sm font-semibold">Display name</span>
+        <input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          className="rounded-2xl border p-3"
+          placeholder="Your name"
+        />
+      </label>
 
-      <label className="block text-sm font-semibold text-slate-600 mb-1">Units</label>
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => setUnits("metric")}
-          className={`rounded-xl border px-3 py-2 ${units === "metric" ? "ring-4 ring-violet-200 border-violet-400 font-bold" : ""}`}
-        >
-          Metric (cm, kg)
-        </button>
-        <button
-          onClick={() => setUnits("imperial")}
-          className={`rounded-xl border px-3 py-2 ${units === "imperial" ? "ring-4 ring-violet-200 border-violet-400 font-bold" : ""}`}
-        >
-          Imperial (ft/in, lb)
-        </button>
+      <div className="grid gap-2">
+        <span className="text-sm font-semibold">Units</span>
+        <div className="flex gap-2">
+          <button
+            className={`px-3 py-1.5 rounded-full border ${units === "metric" ? "bg-violet-600 text-white" : ""}`}
+            onClick={() => setUnits("metric")}
+          >
+            Metric (cm, kg)
+          </button>
+          <button
+            className={`px-3 py-1.5 rounded-full border ${units === "imperial" ? "bg-violet-600 text-white" : ""}`}
+            onClick={() => setUnits("imperial")}
+          >
+            Imperial (ft/in, lb)
+          </button>
+        </div>
       </div>
 
-      <label className="block text-sm font-semibold text-slate-600 mb-1">
-        Dietary tags (comma separated)
-      </label>
-      <input
-        value={tags}
-        onChange={(e) => setTags(e.target.value)}
-        placeholder="e.g. high-protein, gluten-free"
-        className="w-full rounded-xl border p-3 mb-6"
-      />
+      {/* Stats (Imperial primary) */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <label className="grid gap-1">
+          <span className="text-sm font-semibold">Height (inches)</span>
+          <input
+            type="number"
+            min={48} max={84}
+            value={heightIn}
+            onChange={(e) => setHeightIn(e.target.value === "" ? "" : +e.target.value)}
+            className="rounded-2xl border p-3"
+            placeholder="e.g. 70"
+          />
+        </label>
 
-      <button onClick={save} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
-        Save
-      </button>
+        <label className="grid gap-1">
+          <span className="text-sm font-semibold">Weight (lb)</span>
+          <input
+            type="number"
+            min={70} max={600}
+            value={weightLb}
+            onChange={(e) => setWeightLb(e.target.value === "" ? "" : +e.target.value)}
+            className="rounded-2xl border p-3"
+            placeholder="e.g. 180"
+          />
+        </label>
+
+        <label className="grid gap-1">
+          <span className="text-sm font-semibold">Age</span>
+          <input
+            type="number"
+            min={13} max={100}
+            value={age}
+            onChange={(e) => setAge(e.target.value === "" ? "" : +e.target.value)}
+            className="rounded-2xl border p-3"
+            placeholder="e.g. 42"
+          />
+        </label>
+      </div>
+
+      <label className="grid gap-1">
+        <span className="text-sm font-semibold">Dietary tags (comma separated)</span>
+        <input
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          className="rounded-2xl border p-3"
+          placeholder="e.g. high-protein, gluten-free"
+        />
+      </label>
+
+      <div>
+        <button onClick={save} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
+          Save
+        </button>
+      </div>
     </div>
   );
 }
-
-
-
-
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import Link from "next/link";
-
-// type Prof = {
-//   firstName?: string;
-//   lastName?: string;
-//   email?: string;
-//   image?: string; // data URL
-// };
-
-// export default function ProfilePage() {
-//   const [p, setP] = useState<Prof>({});
-//   const [preview, setPreview] = useState<string | undefined>();
-
-//   useEffect(() => {
-//     try {
-//       const stored = localStorage.getItem("bbb_profile");
-//       if (stored) {
-//         const obj = JSON.parse(stored) as Prof;
-//         setP(obj);
-//         setPreview(obj.image);
-//       }
-//     } catch {}
-//   }, []);
-
-//   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-//     const file = e.target.files?.[0];
-//     if (!file) return;
-//     const reader = new FileReader();
-//     reader.onload = () => setPreview(reader.result as string);
-//     reader.readAsDataURL(file);
-//   }
-
-//   function save(e: React.FormEvent) {
-//     e.preventDefault();
-//     const next = { ...p, image: preview };
-//     try { localStorage.setItem("bbb_profile", JSON.stringify(next)); } catch {}
-//     window.dispatchEvent(new Event("bbb:profile-updated"));
-//     alert("Profile saved");
-//   }
-
-//   return (
-//     <main className="mx-auto max-w-3xl px-4 py-8">
-//       <div className="bbb-card p-6">
-//         <h1 className="text-xl font-semibold mb-4">Edit profile</h1>
-
-//         <form onSubmit={save} className="space-y-5">
-//           <div className="flex items-center gap-4">
-//             <div className="h-16 w-16 rounded-full overflow-hidden border"
-//                  style={{ borderColor: "var(--bbb-lines)", background: "var(--bbb-elev1)" }}>
-//               {preview ? (
-//                 // eslint-disable-next-line @next/next/no-img-element
-//                 <img src={preview} alt="avatar" className="h-full w-full object-cover" />
-//               ) : (
-//                 <div className="grid place-items-center h-full w-full text-sm" style={{ color: "var(--bbb-ink-dim)" }}>
-//                   No photo
-//                 </div>
-//               )}
-//             </div>
-//             <label className="btn btn-ghost cursor-pointer">
-//               Upload photo
-//               <input type="file" accept="image/*" className="hidden" onChange={onFile} />
-//             </label>
-//           </div>
-
-//           <div className="grid sm:grid-cols-2 gap-3">
-//             <div>
-//               <label className="block text-xs mb-1" style={{ color: "var(--bbb-ink-dim)" }}>First name</label>
-//               <input className="input" value={p.firstName || ""} onChange={e => setP({ ...p, firstName: e.target.value })} />
-//             </div>
-//             <div>
-//               <label className="block text-xs mb-1" style={{ color: "var(--bbb-ink-dim)" }}>Last name</label>
-//               <input className="input" value={p.lastName || ""} onChange={e => setP({ ...p, lastName: e.target.value })} />
-//             </div>
-//           </div>
-
-//           <div>
-//             <label className="block text-xs mb-1" style={{ color: "var(--bbb-ink-dim)" }}>Email (read-only)</label>
-//             <input className="input opacity-70" value={p.email || ""} readOnly />
-//           </div>
-
-//           <div className="flex items-center gap-2">
-//             <Link href="/" className="btn btn-ghost">Cancel</Link>
-//             <button type="submit" className="btn btn-primary">Save changes</button>
-//           </div>
-//         </form>
-//       </div>
-//     </main>
-//   );
-// }

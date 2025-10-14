@@ -65,9 +65,9 @@ export default function Sidebar() {
         {/* header */}
         <div className="flex items-center justify-between mb-3">
           {!collapsed && (
-            <div className="text-sm font-semibold tracking-wide">
-              Better Bite Buddy
-            </div>
+        <div className="text-sm font-semibold tracking-wide">
+          Better Bite Buddy<span className="align-super text-[10px] ml-0.5">TM</span>
+        </div>
           )}
           <button
             className="rounded-md p-1 hover:bg-black/5 dark:hover:bg-white/5 transition"
@@ -165,3 +165,6 @@ export default function Sidebar() {
     </aside>
   );
 }
+<div className="text-sm font-semibold tracking-wide">
+  Better Bite Buddy
+</div>
