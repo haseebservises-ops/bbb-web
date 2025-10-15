@@ -440,107 +440,79 @@ if (step === 1) return (
       </motion.div>
     );
 
-    // 3: Routine (incl. Name)
-    if (step === 3) return (
-      <motion.div key="routine" variants={variants} initial="enter" animate="center" exit="exit" className="grid gap-6">
-        <div className="text-xl md:text-2xl font-extrabold">Your current routine (quick)</div>
+// 3: Routine (incl. Name)
+if (step === STEP.ROUTINE) return (
+  <motion.div key="routine" variants={variants} initial="enter" animate="center" exit="exit" className="grid gap-6">
+    <div className="text-xl md:text-2xl font-extrabold">Your current routine (quick)</div>
 
-        <input
-          placeholder="Your name (optional)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="rounded-2xl border p-3"
-        />
-          // ...inside step === 3
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-slate-600">
-              Meals per day: <span className="font-bold text-slate-800">{mealsPerDay}</span>
-            </label>
-            <input
-              type="range"
-              min={1}
-              max={6}
-              value={mealsPerDay}
-              onChange={(e) => setMealsPerDay(+e.target.value)}
-              className="w-full"
-            />
-          </div>
+    <input
+      placeholder="Your name (optional)"
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      className="rounded-2xl border p-3"
+    />
 
-          {/* NEW: Snacks per day */}
-          <div className="grid gap-2">
-            <label className="text-sm font-semibold text-slate-600">
-              Snacks per day: <span className="font-bold text-slate-800">{snacksPerDay}</span>
-            </label>
-            <input
-              type="range"
-              min={0}
-              max={3}
-              value={snacksPerDay}
-              onChange={(e) => setSnacksPerDay(+e.target.value)}
-              className="w-full"
-            />
-          </div>
+    {/* Meals per day */}
+    <div className="grid gap-2">
+      <label className="text-sm font-semibold text-slate-600">
+        Meals per day: <span className="font-bold text-slate-800">{mealsPerDay}</span>
+      </label>
+      <input
+        type="range"
+        min={1}
+        max={6}
+        value={mealsPerDay}
+        onChange={(e) => setMealsPerDay(+e.target.value)}
+        className="w-full"
+      />
+    </div>
 
-                  <div className="grid gap-2">
-                    <label className="text-sm font-semibold text-slate-600">Activity level</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {["Low", "Light", "Moderate", "High"].map((t, i) => {
-                        const level = i + 1;
-                        return (
-                          <button
-                            key={t}
-                            onClick={() => setActivity(level)} // ← NO meals side-effect anymore
-                            className={cn(
-                              "rounded-xl p-3 border text-sm transition-all",
-                              activity === level && "ring-4 ring-violet-200 border-violet-400 font-bold shadow-sm"
-                            )}
-                          >
-                            {t}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
+    {/* Snacks per day */}
+    <div className="grid gap-2">
+      <label className="text-sm font-semibold text-slate-600">
+        Snacks per day: <span className="font-bold text-slate-800">{snacksPerDay}</span>
+      </label>
+      <input
+        type="range"
+        min={0}
+        max={3}
+        value={snacksPerDay}
+        onChange={(e) => setSnacksPerDay(+e.target.value)}
+        className="w-full"
+      />
+    </div>
 
-                  <div className="flex justify-between pt-1">
-                    <button onClick={back} className="text-slate-500">Back</button>
-                    <button onClick={() => setStep(STEP.STATS)} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
-                      Start 60-second quiz
-                    </button>
-                  </div>
+    {/* Activity level — no meals side-effect */}
+    <div className="grid gap-2">
+      <label className="text-sm font-semibold text-slate-600">Activity level</label>
+      <div className="grid grid-cols-4 gap-2">
+        {["Low","Light","Moderate","High"].map((t, i) => {
+          const level = i + 1;
+          return (
+            <button
+              key={t}
+              onClick={() => setActivity(level)}
+              className={cn(
+                "rounded-xl p-3 border text-sm transition-all",
+                activity === level && "ring-4 ring-violet-200 border-violet-400 font-bold shadow-sm"
+              )}
+            >
+              {t}
+            </button>
+          );
+        })}
+      </div>
+    </div>
 
-        <div className="grid gap-2">
-          <label className="text-sm font-semibold text-slate-600">Activity level</label>
-          <div className="grid grid-cols-4 gap-2">
-            {["Low", "Light", "Moderate", "High"].map((t, i) => {
-              const level = i + 1;
-              return (
-                <button
-                  key={t}
-                  onClick={() => {
-                    setActivity(level);
-                    setMealsPerDay(activityPresetMeals[level]); // <— keep slider in sync
-                  }}
-                  className={cn(
-                    "rounded-xl p-3 border text-sm transition-all",
-                    activity === level && "ring-4 ring-violet-200 border-violet-400 font-bold shadow-sm"
-                  )}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+    <div className="flex justify-between pt-1">
+      <button onClick={back} className="text-slate-500">Back</button>
+      <button onClick={() => setStep(STEP.STATS)} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
+        Start 60-second quiz
+      </button>
+    </div>
+  </motion.div>
+);
 
-        <div className="flex justify-between pt-1">
-          <button onClick={back} className="text-slate-500">Back</button>
-          <button onClick={next} className="px-4 py-2 rounded-xl bg-violet-600 text-white font-bold">
-            Start 60-second quiz
-          </button>
-        </div>
-      </motion.div>
-    );
         
 // 3.5: Stats (height/weight/age in Imperial)
 if (step === (3.5 as any)) return (
