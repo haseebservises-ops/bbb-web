@@ -8,7 +8,7 @@ type Props = { className?: string };
 export default function PickaxeEmbed({ className = "" }: Props) {
   // Pickaxe embed you already had
   const BASE = "https://betterbitebuddy.com/_embed/MAQHKV3CSQ";
-  const DEPLOY = "deployment-6ec59824-4391-48ae-87db-6452f60b4099";
+  const DEPLOY = "deployment-c3572bb6-f208-4f3f-b5b2-0e419e64eddc";
 
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
